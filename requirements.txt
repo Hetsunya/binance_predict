@@ -1,0 +1,13 @@
+pandas
+websockets
+requests
+numpy
+scikit-learn
+technical-analysis
+pyyaml
+dash
+plotly
+fastapi
+uvicorn
+flask
+ta
