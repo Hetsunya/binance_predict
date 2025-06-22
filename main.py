@@ -1,3 +1,4 @@
+# ЗАПУСКАТЬ ЧЕРЕЗ watcher.py
 import asyncio
 import uvicorn
 from fastapi import FastAPI

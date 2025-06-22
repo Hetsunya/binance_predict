@@ -187,3 +187,34 @@ NameError: name 'prediction_file_lock' is not defined
 2025-06-22 08:15:30,990 - INFO: Prediction saved to predictions_minute.csv: actual=102449.22, predicted=102431.38110000009
 2025-06-22 08:15:34,020 - INFO: Graph update interval set to 60000 ms for 1day
 2025-06-22 08:15:39,802 - INFO: Shutdown signal received, exiting
+2025-06-22 08:37:23,663 - INFO: Starting application
+2025-06-22 08:37:24,227 - INFO: Fetched 1000 records for 1day, total: 1000
+2025-06-22 08:37:24,925 - INFO: Fetched 440 records for 1day, total: 1440
+2025-06-22 08:37:25,327 - INFO: Fetched 1440 historical records for 1day, expected: 1440
+2025-06-22 08:37:26,403 - INFO: Minute model trained, R²=0.9987, samples=1439
+2025-06-22 08:37:26,471 - INFO: Hourly model trained, R²=0.9632, samples=24
+2025-06-22 08:37:26,472 - INFO: Initial models trained
+2025-06-22 08:37:26,944 - INFO: Network connection to Binance API is stable
+2025-06-22 08:38:18,802 - INFO: Graph update interval set to 60000 ms for 1day
+2025-06-22 08:38:29,832 - INFO: Prediction saved to predictions_minute.csv: actual=102283.64, predicted=102324.90000000002
+2025-06-22 08:38:47,478 - INFO: Пользователь инициировал перезапуск приложения.
+2025-06-22 08:38:52,127 - INFO: Starting application
+2025-06-22 08:38:52,640 - INFO: Fetched 1000 records for 1day, total: 1000
+2025-06-22 08:38:53,323 - INFO: Fetched 440 records for 1day, total: 1440
+2025-06-22 08:38:53,706 - INFO: Fetched 1440 historical records for 1day, expected: 1440
+2025-06-22 08:38:54,747 - INFO: Minute model trained, R²=0.9987, samples=1439
+2025-06-22 08:38:54,817 - INFO: Hourly model trained, R²=0.9624, samples=24
+2025-06-22 08:38:54,817 - INFO: Initial models trained
+2025-06-22 08:38:55,278 - INFO: Network connection to Binance API is stable
+2025-06-22 08:38:58,511 - INFO: Graph update interval set to 60000 ms for 1day
+2025-06-22 08:38:59,426 - INFO: Prediction saved to predictions_minute.csv: actual=102304.01, predicted=102344.75739999999
+2025-06-22 08:39:28,803 - INFO: Starting application
+2025-06-22 08:39:29,362 - INFO: Fetched 1000 records for 1day, total: 1000
+2025-06-22 08:39:30,027 - INFO: Fetched 440 records for 1day, total: 1440
+2025-06-22 08:39:30,405 - INFO: Fetched 1440 historical records for 1day, expected: 1440
+2025-06-22 08:39:31,491 - INFO: Minute model trained, R²=0.9988, samples=1439
+2025-06-22 08:39:31,558 - INFO: Hourly model trained, R²=0.9628, samples=24
+2025-06-22 08:39:31,558 - INFO: Initial models trained
+2025-06-22 08:39:32,008 - INFO: Network connection to Binance API is stable
+2025-06-22 08:39:50,495 - INFO: Graph update interval set to 60000 ms for 1day
+2025-06-22 08:39:51,608 - INFO: Prediction saved to predictions_minute.csv: actual=102250.57, predicted=102312.70400000006
