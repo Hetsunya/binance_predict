@@ -11,8 +11,9 @@ from app.logs.logger import setup_logger
 from app.model.train import train_model, train_hourly_model, predict, predict_hourly
 from app.model.indicators import calculate_indicators
 from app.config.manager import load_config
+from threading import Lock
 
-
+prediction_file_lock = Lock()  # Добавленная блокировка
 logger = setup_logger()
 config = load_config()
 data_buffer = []
@@ -118,7 +119,22 @@ async def fetch_historical_data(range_type="1day"):
     except Exception as e:
         logger.error(f"Error fetching historical data: {e}")
 
+# В начало start_binance_websocket
+async def check_network():
+    try:
+        response = requests.get("https://api.binance.com/api/v3/ping", timeout=5)
+        if response.status_code == 200:
+            logger.info("Network connection to Binance API is stable")
+            return True
+        else:
+            logger.warning("Network connection to Binance API failed")
+            return False
+    except Exception as e:
+        logger.error(f"Network check failed: {e}")
+        return False
+    
 async def start_binance_websocket():
+    await check_network()
     """Получение данных через WebSocket Binance"""
     global data_buffer, trade_buffer, last_train_time
     range_type = config["data"]["download_range"]
@@ -129,14 +145,17 @@ async def start_binance_websocket():
     kline_uri = f"wss://stream.binance.com:9443/ws/btcusdt@kline_{interval}"
     trade_uri = "wss://stream.binance.com:9443/ws/btcusdt@aggTrade"
     message_count = 0
-    interval_seconds = {"1s": 1, "1m": 60, "3m": 3*60, "15m": 15*60, "1h": 60*60, "1d": 24*60*60}
-    
+    interval_seconds = {"1s": 1, "1m": 60, "3m": 180, "15m": 900, "1h": 3600, "1d": 86400}
+    reconnect_delay = 5  # Начальная задержка переподключения в секундах
+    max_reconnect_delay = 60  # Максимальная задержка
+
     async def handle_kline():
-        nonlocal message_count
+        nonlocal message_count, reconnect_delay
         last_timestamp = None
         while True:
             try:
-                async with websockets.connect(kline_uri) as ws:
+                async with websockets.connect(kline_uri, ping_interval=20, ping_timeout=30) as ws:
+                    reconnect_delay = 5  # Сбрасываем задержку при успешном подключении
                     while True:
                         message = await ws.recv()
                         data = json.loads(message)
@@ -180,13 +199,16 @@ async def start_binance_websocket():
                                 total_records = len(data_buffer)
                             logger.info(f"Received {total_records} kline records, last_close: {close_price}")
             except Exception as e:
-                logger.error(f"Kline WebSocket error: {e}, reconnecting...")
-                await asyncio.sleep(1)
+                logger.error(f"Kline WebSocket error: {e}, reconnecting in {reconnect_delay} seconds...")
+                await asyncio.sleep(reconnect_delay)
+                reconnect_delay = min(reconnect_delay * 2, max_reconnect_delay)  # Экспоненциальная задержка
     
     async def handle_agg_trade():
+        nonlocal reconnect_delay
         while True:
             try:
-                async with websockets.connect(trade_uri) as ws:
+                async with websockets.connect(trade_uri, ping_interval=20, ping_timeout=30) as ws:
+                    reconnect_delay = 5
                     while True:
                         message = await ws.recv()
                         data = json.loads(message)
@@ -204,8 +226,9 @@ async def start_binance_websocket():
                                         item["volume"] = row["quantity"]
                                         break
             except Exception as e:
-                logger.error(f"AggTrade WebSocket error: {e}, reconnecting...")
-                await asyncio.sleep(1)
+                logger.error(f"AggTrade WebSocket error: {e}, reconnecting in {reconnect_delay} seconds...")
+                await asyncio.sleep(reconnect_delay)
+                reconnect_delay = min(reconnect_delay * 2, max_reconnect_delay)
     
     tasks = [handle_kline(), handle_agg_trade()]
     
@@ -215,20 +238,21 @@ async def start_binance_websocket():
             with buffer_lock:
                 df = pd.DataFrame(data_buffer)
             df = df.drop_duplicates(subset=["timestamp"])
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
             df.set_index("timestamp", inplace=True)
             df = df.sort_index()
-            df = df.interpolate(method="linear")
+            df = df.interpolate(method="linear").dropna()
             df = calculate_indicators(df)
             
             df_min = df.resample("1min").agg({
                 "open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"
-            }).interpolate(method="linear")
+            }).interpolate(method="linear").dropna()
             df_min = calculate_indicators(df_min)
             train_model(df_min)
             
             df_hour = df.resample("1h").agg({
                 "open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"
-            }).interpolate(method="linear")
+            }).interpolate(method="linear").dropna()
             df_hour = calculate_indicators(df_hour)
             train_hourly_model(df_hour)
             
@@ -247,25 +271,28 @@ def get_latest_features(forecast_range="1min"):
         df = pd.DataFrame(data_buffer.copy())
     try:
         df = df.drop_duplicates(subset=["timestamp"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"])  # Убедимся, что timestamp в формате datetime
         df.set_index("timestamp", inplace=True)
         df = df.sort_index()
         interval = config["data"]["websocket_intervals"].get(config["data"]["download_range"], "1s")
-        interval_seconds = {"1s": 1, "1m": 60, "3m": 3*60, "15m": 15*60, "1h": 60*60, "1d": 24*60*60}
+        interval_seconds = {"1s": 1, "1m": 60, "3m": 180, "15m": 900, "1h": 3600, "1d": 86400}
 
+        # Ресэмплинг с проверкой на несоответствие длин
         df = df.resample(f"{interval_seconds.get(interval, 1)}s").agg({
             "open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"
-        }).interpolate(method="linear")
-        
+        }).interpolate(method="linear").dropna()  # Удаляем NaN после интерполяции
+        logger.debug(f"Resampled DataFrame shape: {df.shape}")
+
         df = calculate_indicators(df)
         
         df_min = df.resample("1min").agg({
             "open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"
-        }).interpolate(method="linear")
+        }).interpolate(method="linear").dropna()
         df_min = calculate_indicators(df_min)
         
         df_hour = df.resample("1h").agg({
             "open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"
-        }).interpolate(method="linear")
+        }).interpolate(method="linear").dropna()
         df_hour = calculate_indicators(df_hour)
         
         if len(df_min) < config["model"]["min_candles"] or len(df_hour) < config["model"]["min_hourly_candles"]:
@@ -276,11 +303,12 @@ def get_latest_features(forecast_range="1min"):
         current_time = time.time()
         if current_time - last_pred_time >= interval_seconds.get(interval, 1):
             features = df_min.iloc[-1][["close", "rsi", "sma", "volume", "log_volume"]]
+            features_df = pd.DataFrame([features])  # Создаем DataFrame для предсказания
             if forecast_range == "1min":
-                prediction = predict(pd.DataFrame([features]))
+                prediction = predict(features_df)
                 pred_file = "predictions_minute.csv"
             else:
-                prediction = predict_hourly(pd.DataFrame([features]))
+                prediction = predict_hourly(features_df)
                 pred_file = "predictions_hourly.csv"
             
             if prediction is not None:
@@ -291,11 +319,13 @@ def get_latest_features(forecast_range="1min"):
                     "predicted_price": prediction,
                     "error": abs(actual_price - prediction)
                 })
-                pd.DataFrame(predictions).to_csv(pred_file, index=False)
-                # logger.info(f"Prediction saved to {pred_file}: actual={actual_price}, predicted={prediction}")
+                # Сохраняем предсказания с блокировкой
+                with prediction_file_lock:
+                    pd.DataFrame(predictions).to_csv(pred_file, index=False)
+                logger.info(f"Prediction saved to {pred_file}: actual={actual_price}, predicted={prediction}")
             last_pred_time = current_time
         
         return df_min.iloc[-1] if forecast_range == "1min" else df_hour.iloc[-1]
     except Exception as e:
-        logger.error(f"Error in get_latest_features: {e}")
+        logger.error(f"Error in get_latest_features: {e}", exc_info=True)
         return None

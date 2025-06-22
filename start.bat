@@ -53,7 +53,7 @@ echo Dependency versions saved to requirements_freeze.txt.
 echo.
 
 echo Launching application...
-start "" python main.py
+start "" python watcher.py
 if errorlevel 1 (
     echo [ERROR] Failed to launch application. Check logs/app.log for details.
     pause

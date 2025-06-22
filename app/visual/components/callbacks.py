@@ -11,9 +11,14 @@ import time
 import os
 import sys
 import subprocess
+import platform
 from threading import Lock
+from pathlib import Path
+from app.logs.logger import setup_logger
 
 prediction_file_lock = Lock()
+RESTART_FLAG = Path("restart.flag")
+logger = setup_logger()
 
 @callback(
     Output("interval-component", "interval"),
@@ -357,4 +362,19 @@ def update_settings(n_clicks, buffer_size, rsi_window, sma_window, update_interv
             logger.info("Dash and WebSocket restarted successfully")
         except Exception as e:
             logger.error(f"Error restarting Dash: {e}", exc_info=True)
+    return n_clicks
+
+@callback(
+    Output("restart-btn", "n_clicks"),
+    Input("restart-btn", "n_clicks"),
+    prevent_initial_call=True
+)
+def restart_application(n_clicks):
+    """Сигнализирует через файл о необходимости перезапуска"""
+    try:
+        logger.info("Пользователь инициировал перезапуск приложения.")
+        RESTART_FLAG.touch()
+        os._exit(0)
+    except Exception as e:
+        logger.error(f"Ошибка при попытке перезапуска: {e}")
     return n_clicks

@@ -33,6 +33,7 @@ def create_online_layout():
                         {"label": "Без ограничений", "value": "full"},
                     ], value="full"),
                     html.Button("Скачать данные", id="download-btn"),
+                    html.Button("Перезапустить приложение", id="restart-btn", n_clicks=0),
                 ]),
                 dcc.Tab(label="Настройки", value="settings", children=create_settings_panel()),
             ]),

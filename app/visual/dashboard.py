@@ -1,9 +1,18 @@
 from dash import Dash
 from app.logs.logger import setup_logger
-
+from dash_auth import BasicAuth
 from app.visual.components import create_layout
+from dash_auth import BasicAuth
+import secrets
+
+SECRET_KEY = secrets.token_hex(16)  # Генерируем случайный ключ
+DASH_AUTH_CREDENTIALS = {
+    "admin": "admin"  # логин: пароль
+}
 logger = setup_logger()
 dash_app = Dash(__name__, assets_folder="../static")
+dash_app.server.secret_key = SECRET_KEY  # Устанавливаем секретный ключ
+BasicAuth(dash_app, DASH_AUTH_CREDENTIALS)
 
 dash_app.layout = create_layout()
 
