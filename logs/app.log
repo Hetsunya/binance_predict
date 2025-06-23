@@ -952,3 +952,26 @@ ValueError: Length of values (190) does not match length of index (191)
 2025-06-23 06:17:31,091 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
 2025-06-23 06:18:32,063 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
 2025-06-23 06:19:50,067 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
+2025-06-23 06:20:52,467 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
+2025-06-23 06:21:54,844 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
+2025-06-23 06:22:55,534 - INFO: Prediction saved to predictions_minute.csv: actual=101343.37, predicted=101331.90100000009
+2025-06-23 06:25:31,505 - INFO: Shutdown signal received, exiting
+2025-06-23 06:25:36,125 - INFO: Starting application
+2025-06-23 06:25:36,607 - INFO: Fetched 1000 records for 1day, total: 1000
+2025-06-23 06:25:37,199 - INFO: Fetched 440 records for 1day, total: 1440
+2025-06-23 06:25:37,995 - INFO: Fetched 1440 historical records for 1day, expected: 1440
+2025-06-23 06:25:39,131 - INFO: Minute model trained, R²=0.9996, samples=1439
+2025-06-23 06:25:39,366 - INFO: Hourly model trained, R²=0.9641, samples=24
+2025-06-23 06:25:39,366 - INFO: Initial models trained
+2025-06-23 06:25:39,748 - INFO: Network connection to Binance API is stable
+2025-06-23 06:26:23,158 - INFO: Graph update interval set to 60000 ms for 1day
+2025-06-23 06:26:24,630 - INFO: Prediction saved to predictions_minute.csv: actual=101165.07, predicted=101175.58479999991
+2025-06-23 06:26:29,740 - INFO: Пользователь инициировал перезапуск приложения.
+2025-06-23 06:26:35,049 - INFO: Starting application
+2025-06-23 06:26:35,476 - INFO: Fetched 1000 records for 1day, total: 1000
+2025-06-23 06:26:36,062 - INFO: Fetched 440 records for 1day, total: 1440
+2025-06-23 06:26:36,853 - INFO: Fetched 1440 historical records for 1day, expected: 1440
+2025-06-23 06:26:38,003 - INFO: Minute model trained, R²=0.9996, samples=1439
+2025-06-23 06:26:38,240 - INFO: Hourly model trained, R²=0.9637, samples=24
+2025-06-23 06:26:38,240 - INFO: Initial models trained
+2025-06-23 06:26:38,639 - INFO: Network connection to Binance API is stable

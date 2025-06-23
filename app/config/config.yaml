@@ -1,3 +1,6 @@
+auth:
+  password: qwerty63
+  username: admin
 data:
   buffer_size: 50000
   download_range: 1day
