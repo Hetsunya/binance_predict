@@ -20,7 +20,7 @@ def start_dash():
     print(dash_app.callback_map.keys())
     """Запуск сервера Dash"""
     try:
-        dash_app.run(port=8050, host="localhost")
+        dash_app.run(port=8050, host="0.0.0.0")
         logger.info("Dash server started")
     except Exception as e:
         logger.error(f"Dash server error: {e}")
